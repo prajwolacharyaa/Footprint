@@ -1,0 +1,18 @@
+<article class="rounded-lg border border-slate-800 bg-slate-900/70 p-5">
+  <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">Names</h3>
+  <div class="mt-4 space-y-3">
+    {% for item in names %}
+    <p>{{ item.value }} <span class="text-slate-500">{{ item.source }}</span></p>
+    {% else %}
+    <p class="text-slate-500">No public name signals found.</p>
+    {% endfor %}
+  </div>
+</article>
+<article class="rounded-lg border border-slate-800 bg-slate-900/70 p-5">
+  <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">Usernames</h3>
+  <div class="mt-4 flex flex-wrap gap-2">
+    {% for item in usernames %}
+    <span class="rounded-full border border-slate-700 px-3 py-1">{{ item.value }} <small class="text-slate-500">{{ item.source }}</small></span>
+    {% endfor %}
+  </div>
+</article>

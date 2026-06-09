@@ -1,0 +1,63 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+try:
+    from colorama import Fore, Style, init
+except ModuleNotFoundError:
+    print("Missing dependency: colorama. Run: bash scripts/install_kali.sh")
+    raise SystemExit(1)
+
+from core.report import generate_report
+from core.scanner import FootprintScanner
+from core.validation import is_valid_email, normalize_email
+
+
+BANNER = rf"""
+{Fore.CYAN}
+    ______            __             _       __
+   / ____/___  ____  / /_____  _____(_)___  / /_
+  / /_  / __ \/ __ \/ __/ __ \/ ___/ / __ \/ __/
+ / __/ / /_/ / /_/ / /_/ /_/ / /  / / / / / /_
+/_/    \____/\____/\__/\____/_/  /_/_/ /_/\__/
+{Style.BRIGHT}              Email Intelligence OSINT{Style.RESET_ALL}
+"""
+
+
+def ask_email() -> str:
+    while True:
+        email = normalize_email(input(f"{Fore.MAGENTA}[>]{Style.RESET_ALL} Enter target email: "))
+        if is_valid_email(email):
+            return email
+        print(f"{Fore.RED}[!]{Style.RESET_ALL} Invalid email. Try again.")
+
+
+def main() -> int:
+    init(autoreset=True)
+    print(BANNER)
+
+    email = ask_email()
+    print(f"{Fore.YELLOW}[!]{Style.RESET_ALL} Building full public footprint for {email}")
+
+    scanner = FootprintScanner()
+    data = scanner.scan(email)
+
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} Profile summary created")
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} Username candidates: {len(data['usernames'])}")
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} Links collected: {len(data['links'])}")
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} Platform signals: {len(data['platforms'])}")
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} Domain signals: {len(data['domain_intel'])}")
+
+    for platform in data["platforms"]:
+        marker = "+" if platform["status"] == "found" else "-" if platform["status"] == "not_found" else "!"
+        color = Fore.GREEN if marker == "+" else Fore.RED if marker == "-" else Fore.YELLOW
+        print(f"{color}[{marker}]{Style.RESET_ALL} {platform['name']}: {platform['detail']}")
+
+    report = generate_report(data, Path("output"))
+    print(f"{Fore.GREEN}[+]{Style.RESET_ALL} HTML report saved: {report}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
